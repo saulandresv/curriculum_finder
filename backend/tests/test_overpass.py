@@ -1,4 +1,3 @@
-import pytest
 from app.services.overpass import _build_query, _parse_element
 
 def test_build_query_specific_type():

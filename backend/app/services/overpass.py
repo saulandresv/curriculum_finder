@@ -41,7 +41,12 @@ _AMENITY_TO_TYPE = {
 
 def _build_query(lat: float, lon: float, radius: int, business_type: str) -> str:
     around = f"(around:{radius},{lat},{lon})"
-    filters = _ALL_FILTERS if business_type == "all" else _TYPE_FILTERS.get(business_type, _ALL_FILTERS)
+    if business_type == "all":
+        filters = _ALL_FILTERS
+    elif business_type in _TYPE_FILTERS:
+        filters = _TYPE_FILTERS[business_type]
+    else:
+        raise ValueError(f"Unknown business_type: {business_type!r}")
     lines = "\n".join(f"  {f}{around};" for f in filters)
     return f"[out:json][timeout:15];\n(\n{lines}\n);\nout center body;"
 
@@ -52,8 +57,8 @@ def _parse_element(el: dict) -> Optional[dict]:
     if not name:
         return None
 
-    lat = el.get("lat") or el.get("center", {}).get("lat")
-    lon = el.get("lon") or el.get("center", {}).get("lon")
+    lat = el["lat"] if "lat" in el else el.get("center", {}).get("lat")
+    lon = el["lon"] if "lon" in el else el.get("center", {}).get("lon")
     if lat is None or lon is None:
         return None
 
