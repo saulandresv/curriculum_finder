@@ -2,7 +2,8 @@ from pydantic import BaseModel
 from typing import Literal, Optional
 
 BusinessType = Literal[
-    "office", "restaurant", "cafe", "shop", "bank", "hotel", "other"
+    "office", "restaurant", "cafe", "shop", "bank", "hotel", "other",
+    "tienda", "supermercado", "ferreteria", "panaderia", "ropa",
 ]
 
 
