@@ -145,7 +145,11 @@ export function MapCardView() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [activeTypes, setActiveTypes] = useState<Set<string>>(new Set(ALL_TYPES))
   const [search, setSearch] = useState('')
-  const [sortBy, setSortBy] = useState<'name-asc' | 'name-desc' | 'type' | 'status'>('name-asc')
+  const [sortField, setSortField] = useState<'name' | 'type' | 'status' | 'vacancies'>('name')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+  const [onlyWithVacancies, setOnlyWithVacancies] = useState(false)
+  const [vacancyCache, setVacancyCache] = useState<Record<string, number>>({})
+  const [vacancyCacheLoading, setVacancyCacheLoading] = useState(false)
   const [placesData, setPlacesData] = useState<PlacesData | null>(null)
   const [placesLoading, setPlacesLoading] = useState(false)
   const [jobsData, setJobsData] = useState<{ total: number; jobs: { title: string; company: string; location: string; link: string }[] } | null>(null)
@@ -162,7 +166,7 @@ export function MapCardView() {
       radius: Math.round(circle.radius),
       type: 'all',
     })
-      .then((data) => { setBusinesses(data) })
+      .then((data) => { setBusinesses(data); setVacancyCache({}); setOnlyWithVacancies(false) })
       .catch((e: unknown) => { setBusinesses([]); setError(e instanceof Error ? e.message : 'Error de red') })
       .finally(() => setLoading(false))
   }, [circle])
@@ -175,7 +179,10 @@ export function MapCardView() {
     setJobsData(null)
     fetch(`/api/jobs?name=${encodeURIComponent(b.name)}`)
       .then((r) => r.json())
-      .then((d) => setJobsData(d))
+      .then((d) => {
+        setJobsData(d)
+        setVacancyCache((prev) => ({ ...prev, [b.id]: d.total ?? 0 }))
+      })
       .catch(() => setJobsData(null))
       .finally(() => setJobsLoading(false))
   }, [selectedId, businesses])
@@ -215,21 +222,45 @@ export function MapCardView() {
 
   const STATUS_ORDER: Record<string, number> = { interesado: 0, postule: 1, ya_fui: 2, descartado: 3 }
 
+  const handleVacanciesToggle = () => {
+    if (onlyWithVacancies) { setOnlyWithVacancies(false); return }
+    const uncached = businesses.filter((b) => !(b.id in vacancyCache))
+    if (uncached.length === 0) { setOnlyWithVacancies(true); return }
+    setVacancyCacheLoading(true)
+    Promise.all(
+      uncached.map((b) =>
+        fetch(`/api/jobs?name=${encodeURIComponent(b.name)}`)
+          .then((r) => r.json())
+          .then((d) => [b.id, d.total ?? 0] as const)
+          .catch(() => [b.id, 0] as const)
+      )
+    ).then((results) => {
+      setVacancyCache((prev) => ({ ...prev, ...Object.fromEntries(results) }))
+      setOnlyWithVacancies(true)
+    }).finally(() => setVacancyCacheLoading(false))
+  }
+
   const filtered = businesses
     .filter(
       (b) =>
         activeTypes.has(b.type) &&
-        (search === '' || b.name.toLowerCase().includes(search.toLowerCase()))
+        (search === '' || b.name.toLowerCase().includes(search.toLowerCase())) &&
+        (!onlyWithVacancies || (vacancyCache[b.id] ?? 0) > 0)
     )
     .sort((a, b) => {
-      switch (sortBy) {
-        case 'name-asc':  return a.name.localeCompare(b.name)
-        case 'name-desc': return b.name.localeCompare(a.name)
-        case 'type':      return a.type.localeCompare(b.type) || a.name.localeCompare(b.name)
+      const dir = sortDir === 'asc' ? 1 : -1
+      switch (sortField) {
+        case 'name':    return dir * a.name.localeCompare(b.name)
+        case 'type':    return dir * (a.type.localeCompare(b.type) || a.name.localeCompare(b.name))
         case 'status': {
           const sa = statuses[a.id] != null ? (STATUS_ORDER[statuses[a.id]] ?? 99) : 99
           const sb = statuses[b.id] != null ? (STATUS_ORDER[statuses[b.id]] ?? 99) : 99
-          return sa - sb || a.name.localeCompare(b.name)
+          return dir * ((sa - sb) || a.name.localeCompare(b.name))
+        }
+        case 'vacancies': {
+          const va = vacancyCache[a.id] ?? -1
+          const vb = vacancyCache[b.id] ?? -1
+          return dir * ((vb - va) || a.name.localeCompare(b.name))
         }
         default: return 0
       }
@@ -381,27 +412,63 @@ export function MapCardView() {
             />
           </div>
 
-          {/* sort controls */}
-          <div style={{ padding: '8px 14px 0', display: 'flex', gap: '4px', flexShrink: 0, flexWrap: 'wrap' }}>
-            {([['name-asc', 'A→Z'], ['name-desc', 'Z→A'], ['type', 'TIPO'], ['status', 'ESTADO']] as const).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setSortBy(key)}
-                style={{
-                  fontFamily: 'Space Grotesk, sans-serif',
-                  fontSize: '8px',
-                  fontWeight: 700,
-                  padding: '2px 7px',
-                  border: `1.5px solid ${sortBy === key ? '#000' : '#ccc'}`,
-                  background: sortBy === key ? '#000' : 'transparent',
-                  color: sortBy === key ? '#f5e642' : '#aaa',
-                  cursor: 'pointer',
-                  letterSpacing: '0.5px',
-                }}
-              >
-                {label}
-              </button>
-            ))}
+          {/* sort + vacancy filter */}
+          <div style={{ padding: '8px 14px 0', display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
+            <select
+              value={sortField}
+              onChange={(e) => setSortField(e.target.value as typeof sortField)}
+              style={{
+                flex: 1,
+                fontFamily: 'Space Grotesk, sans-serif',
+                fontSize: '9px',
+                fontWeight: 700,
+                padding: '4px 6px',
+                border: '2px solid #000',
+                background: '#fff',
+                outline: 'none',
+                cursor: 'pointer',
+                letterSpacing: '0.5px',
+              }}
+            >
+              <option value="name">NOMBRE</option>
+              <option value="type">TIPO</option>
+              <option value="status">ESTADO</option>
+              <option value="vacancies">VACANTES</option>
+            </select>
+            <button
+              onClick={() => setSortDir((d) => d === 'asc' ? 'desc' : 'asc')}
+              style={{
+                fontFamily: 'Space Grotesk, sans-serif',
+                fontSize: '13px',
+                fontWeight: 900,
+                padding: '2px 9px',
+                border: '2px solid #000',
+                background: '#000',
+                color: '#f5e642',
+                cursor: 'pointer',
+                lineHeight: 1,
+              }}
+            >
+              {sortDir === 'asc' ? '↑' : '↓'}
+            </button>
+            <button
+              onClick={handleVacanciesToggle}
+              disabled={vacancyCacheLoading}
+              style={{
+                fontFamily: 'Space Grotesk, sans-serif',
+                fontSize: '8px',
+                fontWeight: 700,
+                padding: '4px 8px',
+                border: `2px solid ${onlyWithVacancies ? '#16a34a' : '#ccc'}`,
+                background: onlyWithVacancies ? '#16a34a18' : 'transparent',
+                color: onlyWithVacancies ? '#16a34a' : '#888',
+                cursor: vacancyCacheLoading ? 'wait' : 'pointer',
+                letterSpacing: '0.5px',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {vacancyCacheLoading ? '...' : '● VACANTES'}
+            </button>
           </div>
 
           {/* category filter chips */}
