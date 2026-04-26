@@ -384,7 +384,7 @@ export function MapCardView() {
           </div>
 
           {/* map */}
-          <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+          <div style={{ flex: 1, position: 'relative', minHeight: 0, overflow: 'hidden' }}>
             {loading && (
               <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: '#000', color: '#f5e642', fontFamily: 'Unbounded, sans-serif', fontSize: '9px', fontWeight: 900, letterSpacing: '2px', padding: '6px 14px' }}>
                 BUSCANDO...
@@ -673,12 +673,6 @@ export function MapCardView() {
                 <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '10px', color: '#888', textAlign: 'center', lineHeight: 1.7 }}>
                   Activa el modo dibujo en el<br />mapa y arrastra para explorar<br />empresas en esa zona.
                 </div>
-                <button
-                  onClick={() => { setShowOverlay(false); setLocked(true) }}
-                  style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '8px', fontWeight: 900, padding: '8px 18px', background: '#000', color: '#f5e642', border: '2px solid #000', cursor: 'pointer', letterSpacing: '2px', marginTop: 4 }}
-                >
-                  DIBUJAR ZONA →
-                </button>
               </div>
             )}
             {circle && loading && (
