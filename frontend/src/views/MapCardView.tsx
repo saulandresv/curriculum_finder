@@ -115,7 +115,8 @@ function MapController({ locked, onCircleDrawn }: { locked: boolean; onCircleDra
 
   useEffect(() => {
     if (!locked) return
-    const handler = new L.Draw.Circle(map, {
+    const drawMap = map as unknown as L.DrawMap
+    const handler = new L.Draw.Circle(drawMap, {
       shapeOptions: { color: '#000', weight: 2, dashArray: '6 4', fillOpacity: 0.05 },
     })
     handler.enable()
@@ -125,11 +126,11 @@ function MapController({ locked, onCircleDrawn }: { locked: boolean; onCircleDra
       callbackRef.current({ center: circle.getLatLng(), radius: circle.getRadius() })
       handler.enable()
     }
-    map.on(L.Draw.Event.CREATED, onCreated)
+    drawMap.on(L.Draw.Event.CREATED, onCreated as L.LeafletEventHandlerFn)
 
     return () => {
       handler.disable()
-      map.off(L.Draw.Event.CREATED, onCreated)
+      drawMap.off(L.Draw.Event.CREATED, onCreated as L.LeafletEventHandlerFn)
     }
   }, [locked, map])
 
@@ -250,17 +251,6 @@ export function MapCardView() {
     })
   }
 
-  const allFilteredSelected = filtered.length > 0 && filtered.every((b) => routeSet.has(b.id))
-
-  const toggleAllFiltered = () => {
-    setRouteSet((prev) => {
-      const next = new Set(prev)
-      if (allFilteredSelected) filtered.forEach((b) => next.delete(b.id))
-      else filtered.forEach((b) => next.add(b.id))
-      return next
-    })
-  }
-
   const ptDist = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) => {
     const d = (a.lat - b.lat) ** 2 + (a.lon - b.lon) ** 2
     return Math.sqrt(d)
@@ -323,6 +313,17 @@ export function MapCardView() {
         default: return 0
       }
     })
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((b) => routeSet.has(b.id))
+
+  const toggleAllFiltered = () => {
+    setRouteSet((prev) => {
+      const next = new Set(prev)
+      if (allFilteredSelected) filtered.forEach((b) => next.delete(b.id))
+      else filtered.forEach((b) => next.add(b.id))
+      return next
+    })
+  }
 
   const exportCSV = () => {
     const headers = ['Nombre', 'Tipo', 'Dirección', 'Estado']

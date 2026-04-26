@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { BusinessType, MapCircle, MapStore } from '../types'
+import type { BusinessType, MapStore } from '../types'
 
 export const useMapStore = create<MapStore>((set) => ({
   circle: null,

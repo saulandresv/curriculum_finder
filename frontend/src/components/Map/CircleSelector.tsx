@@ -48,12 +48,13 @@ export function CircleSelector({ onCircleDrawn }: Props) {
       callbackRef.current(lat, lng, radius)
     }
 
-    map.on(L.Draw.Event.CREATED, handleCreated)
+    const drawMap = map as unknown as L.DrawMap
+    drawMap.on(L.Draw.Event.CREATED, handleCreated as L.LeafletEventHandlerFn)
 
     return () => {
       map.removeControl(drawControl)
       map.removeLayer(drawnItems)
-      map.off(L.Draw.Event.CREATED, handleCreated)
+      drawMap.off(L.Draw.Event.CREATED, handleCreated as L.LeafletEventHandlerFn)
     }
   }, [map])
 
