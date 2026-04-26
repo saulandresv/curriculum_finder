@@ -11,7 +11,7 @@ router = APIRouter()
 async def search(
     lat: float = Query(..., description="Latitud centro del círculo"),
     lon: float = Query(..., description="Longitud centro del círculo"),
-    radius: int = Query(default=500, ge=100, le=5000, description="Radio en metros"),
+    radius: int = Query(default=500, ge=100, le=50000, description="Radio en metros"),
     type: str = Query(default="all", description="Tipo de empresa"),
 ):
     try:

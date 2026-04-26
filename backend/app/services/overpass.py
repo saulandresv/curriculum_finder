@@ -60,7 +60,7 @@ def _build_query(lat: float, lon: float, radius: int, business_type: str) -> str
     else:
         raise ValueError(f"Unknown business_type: {business_type!r}")
     lines = "\n".join(f"  {f}{around};" for f in filters)
-    return f"[out:json][timeout:15];\n(\n{lines}\n);\nout center body;"
+    return f"[out:json][timeout:45];\n(\n{lines}\n);\nout center body;"
 
 
 def _parse_element(el: dict) -> Optional[dict]:
@@ -104,7 +104,7 @@ def _parse_element(el: dict) -> Optional[dict]:
 async def search_businesses(lat: float, lon: float, radius: int, business_type: str) -> list[dict]:
     query = _build_query(lat, lon, radius, business_type)
     headers = {"User-Agent": "curriculum-rutes/1.0 (personal job search tool)"}
-    async with httpx.AsyncClient(timeout=20.0) as client:
+    async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(OVERPASS_URL, data={"data": query}, headers=headers)
         response.raise_for_status()
         data = response.json()
