@@ -354,9 +354,14 @@ export function MapCardView() {
 
           {/* header */}
           <div style={{ flexShrink: 0, padding: '0 1.2vw', minHeight: '44px', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '11px', fontWeight: 900, letterSpacing: '3px', color: '#f5e642' }}>
-              MAPA DE EMPRESAS
-            </span>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '11px', fontWeight: 900, letterSpacing: '3px', color: '#f5e642' }}>
+                MAPA DE EMPRESAS
+              </span>
+              <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '8px', color: '#666', letterSpacing: '1px', marginTop: 1 }}>
+                Explora · Filtra · Postula
+              </span>
+            </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               {circle && (
                 <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '10px', color: '#888', letterSpacing: '1px' }}>
@@ -368,8 +373,8 @@ export function MapCardView() {
                   LIMPIAR
                 </button>
               )}
-              <button onClick={() => setLocked((v) => !v)} style={btnStyle(locked ? '#f5e642' : '#555')}>
-                {locked ? '✏️ DIBUJAR' : '🔓 LIBRE'}
+              <button onClick={() => setLocked((v) => !v)} style={btnStyle(locked ? '#f5e642' : '#fff')}>
+                {locked ? '✕ CANCELAR' : '✏ DIBUJAR ZONA'}
               </button>
             </div>
           </div>
@@ -405,6 +410,43 @@ export function MapCardView() {
                 />
               ))}
             </LeafletMapContainer>
+
+            {/* overlay: instrucciones para nuevos usuarios */}
+            {!circle && !locked && (
+              <div style={{ position: 'absolute', inset: 0, zIndex: 1001, background: 'rgba(0,0,0,0.84)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28 }}>
+                <div style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '9px', letterSpacing: '4px', color: '#f5e642', fontWeight: 900 }}>
+                  CÓMO USAR
+                </div>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  {([
+                    { n: '01', title: 'ACTIVA EL DIBUJO', desc: 'Click en "✏ DIBUJAR ZONA" arriba a la derecha' },
+                    { n: '02', title: 'DEFINE EL ÁREA', desc: 'Click y arrastra en el mapa para delimitar la zona' },
+                    { n: '03', title: 'EXPLORA Y POSTULA', desc: 'Filtra empresas, revisa vacantes y planifica tu ruta' },
+                  ] as const).map((s) => (
+                    <div key={s.n} style={{ background: '#111', border: '2px solid #333', padding: '14px 12px', width: 130, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '24px', fontWeight: 900, color: '#f5e642', lineHeight: 1 }}>{s.n}</div>
+                      <div style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '7px', letterSpacing: '1px', color: '#fff', fontWeight: 700, lineHeight: 1.5 }}>{s.title}</div>
+                      <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '9px', color: '#888', lineHeight: 1.5 }}>{s.desc}</div>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setLocked(true)}
+                  style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '10px', fontWeight: 900, letterSpacing: '2px', padding: '10px 28px', background: '#f5e642', color: '#000', border: '3px solid #000', cursor: 'pointer', boxShadow: '4px 4px 0 rgba(255,255,255,0.15)' }}
+                >
+                  EMPEZAR →
+                </button>
+              </div>
+            )}
+
+            {/* banner modo dibujo */}
+            {locked && (
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 1001, background: '#f5e642', padding: '7px 16px', display: 'flex', alignItems: 'center', borderTop: '2px solid #000' }}>
+                <span style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '8px', fontWeight: 900, letterSpacing: '2px', color: '#000', flex: 1, textAlign: 'center' }}>
+                  ✏ MODO DIBUJO ACTIVO — CLICK Y ARRASTRA PARA DEFINIR EL ÁREA
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -607,8 +649,22 @@ export function MapCardView() {
           {/* business list */}
           <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin' }}>
             {!circle && (
-              <div style={{ padding: '20px 14px', fontFamily: 'Space Grotesk, sans-serif', fontSize: '11px', color: '#aaa', textAlign: 'center' }}>
-                Dibuja un área en el mapa
+              <div style={{ padding: '28px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+                <div style={{ width: 44, height: 44, border: '3px solid #000', borderRadius: '50%', background: '#f5e642', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, lineHeight: 1, flexShrink: 0 }}>
+                  ⊕
+                </div>
+                <div style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '9px', fontWeight: 900, letterSpacing: '2px', textAlign: 'center', lineHeight: 2, color: '#000' }}>
+                  DEFINE UN ÁREA<br />DE BÚSQUEDA
+                </div>
+                <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '10px', color: '#888', textAlign: 'center', lineHeight: 1.7 }}>
+                  Activa el modo dibujo en el<br />mapa y arrastra para explorar<br />empresas en esa zona.
+                </div>
+                <button
+                  onClick={() => setLocked(true)}
+                  style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '8px', fontWeight: 900, padding: '8px 18px', background: '#000', color: '#f5e642', border: '2px solid #000', cursor: 'pointer', letterSpacing: '2px', marginTop: 4 }}
+                >
+                  DIBUJAR ZONA →
+                </button>
               </div>
             )}
             {circle && loading && (
