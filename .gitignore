@@ -23,3 +23,8 @@ Thumbs.db
 
 # Node
 node_modules/
+
+.claude/
+.superpowers/
+docs/superpowers/
+dist/

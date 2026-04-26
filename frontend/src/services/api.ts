@@ -1,5 +1,5 @@
 // frontend/src/services/api.ts
-import { Business } from '../types'
+import type { Business } from '../types'
 
 export type SearchParams = {
   lat: number

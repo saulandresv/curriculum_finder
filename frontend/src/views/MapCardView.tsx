@@ -150,6 +150,7 @@ export function MapCardView() {
   const [onlyWithVacancies, setOnlyWithVacancies] = useState(false)
   const [vacancyCache, setVacancyCache] = useState<Record<string, number>>({})
   const [vacancyCacheLoading, setVacancyCacheLoading] = useState(false)
+  const [routeSet, setRouteSet] = useState<Set<string>>(new Set())
   const [placesData, setPlacesData] = useState<PlacesData | null>(null)
   const [placesLoading, setPlacesLoading] = useState(false)
   const [jobsData, setJobsData] = useState<{ total: number; jobs: { title: string; company: string; location: string; link: string }[] } | null>(null)
@@ -238,6 +239,63 @@ export function MapCardView() {
       setVacancyCache((prev) => ({ ...prev, ...Object.fromEntries(results) }))
       setOnlyWithVacancies(true)
     }).finally(() => setVacancyCacheLoading(false))
+  }
+
+  const toggleRoute = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setRouteSet((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((b) => routeSet.has(b.id))
+
+  const toggleAllFiltered = () => {
+    setRouteSet((prev) => {
+      const next = new Set(prev)
+      if (allFilteredSelected) filtered.forEach((b) => next.delete(b.id))
+      else filtered.forEach((b) => next.add(b.id))
+      return next
+    })
+  }
+
+  const ptDist = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) => {
+    const d = (a.lat - b.lat) ** 2 + (a.lon - b.lon) ** 2
+    return Math.sqrt(d)
+  }
+
+  const handleOpenRoute = () => {
+    if (routeSet.size === 0) return
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const points = [...routeSet]
+          .map((id) => businesses.find((b) => b.id === id))
+          .filter((b): b is Business => b != null)
+        let current = { lat: pos.coords.latitude, lon: pos.coords.longitude }
+        const remaining = [...points]
+        const ordered: typeof points = []
+        while (remaining.length > 0) {
+          let nearestIdx = 0
+          let nearestDist = ptDist(current, remaining[0])
+          for (let i = 1; i < remaining.length; i++) {
+            const d = ptDist(current, remaining[i])
+            if (d < nearestDist) { nearestDist = d; nearestIdx = i }
+          }
+          const [next] = remaining.splice(nearestIdx, 1)
+          ordered.push(next)
+          current = { lat: next.lat, lon: next.lon }
+        }
+        const origin = `${pos.coords.latitude},${pos.coords.longitude}`
+        const dest = ordered[ordered.length - 1]
+        const mid = ordered.slice(0, -1)
+        let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest.lat},${dest.lon}&travelmode=walking`
+        if (mid.length > 0) url += `&waypoints=${mid.map((p) => `${p.lat},${p.lon}`).join('|')}`
+        window.open(url, '_blank')
+      },
+      () => alert('No se pudo obtener tu ubicación. Activa el permiso de geolocalización.')
+    )
   }
 
   const filtered = businesses
@@ -388,6 +446,26 @@ export function MapCardView() {
                   CSV ↓
                 </button>
               )}
+              {filtered.length > 0 && (
+                <button
+                  onClick={toggleAllFiltered}
+                  title={allFilteredSelected ? 'Deseleccionar todos' : 'Seleccionar todos'}
+                  style={{
+                    width: 18,
+                    height: 18,
+                    border: `2px solid ${allFilteredSelected ? '#f5e642' : '#555'}`,
+                    background: allFilteredSelected ? '#f5e642' : 'transparent',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 0,
+                    flexShrink: 0,
+                  }}
+                >
+                  {allFilteredSelected && <span style={{ fontSize: 10, fontWeight: 900, color: '#000', lineHeight: 1 }}>✓</span>}
+                </button>
+              )}
             </div>
           </div>
 
@@ -471,6 +549,27 @@ export function MapCardView() {
             </button>
           </div>
 
+          {/* route toolbar */}
+          {routeSet.size > 0 && (
+            <div style={{ flexShrink: 0, padding: '6px 14px', background: '#f5e642', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '2px solid #000' }}>
+              <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '9px', fontWeight: 700, flex: 1 }}>
+                {routeSet.size} PARADA{routeSet.size !== 1 ? 'S' : ''}
+              </span>
+              <button
+                onClick={() => setRouteSet(new Set())}
+                style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '9px', fontWeight: 700, padding: '2px 8px', border: '2px solid #000', background: 'transparent', cursor: 'pointer' }}
+              >
+                LIMPIAR
+              </button>
+              <button
+                onClick={handleOpenRoute}
+                style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '9px', fontWeight: 900, padding: '3px 10px', border: '2px solid #000', background: '#000', color: '#f5e642', cursor: 'pointer', letterSpacing: '1px' }}
+              >
+                RUTA ↗
+              </button>
+            </div>
+          )}
+
           {/* category filter chips */}
           <div style={{ padding: '10px 14px', display: 'flex', flexWrap: 'wrap', gap: '6px', flexShrink: 0, borderBottom: '2px solid #000' }}>
             {ALL_TYPES.map((t) => {
@@ -542,6 +641,24 @@ export function MapCardView() {
                     boxShadow: isSelected ? 'inset 3px 0 0 #000' : 'none',
                   }}
                 >
+                  <button
+                    onClick={(e) => toggleRoute(b.id, e)}
+                    style={{
+                      width: 14,
+                      height: 14,
+                      border: `2px solid ${routeSet.has(b.id) ? '#000' : '#ccc'}`,
+                      background: routeSet.has(b.id) ? '#000' : 'transparent',
+                      flexShrink: 0,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: 0,
+                      marginTop: 1,
+                    }}
+                  >
+                    {routeSet.has(b.id) && <span style={{ color: '#f5e642', fontSize: 8, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+                  </button>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0, marginTop: 3, border: '1.5px solid #000' }} />
                   {statuses[b.id] && (() => {
                     const cfg = STATUS_CONFIG[statuses[b.id]]

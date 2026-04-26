@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { fetchBusinesses } from '../services/api'
 import { useMapStore } from '../store/mapStore'
-import { Business } from '../types'
+import type { Business } from '../types'
 
 export function useBusinessSearch() {
   const circle = useMapStore((s) => s.circle)

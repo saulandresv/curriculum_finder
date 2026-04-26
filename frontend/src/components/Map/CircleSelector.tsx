@@ -1,5 +1,5 @@
 // frontend/src/components/Map/CircleSelector.tsx
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet-draw'
@@ -11,6 +11,8 @@ interface Props {
 
 export function CircleSelector({ onCircleDrawn }: Props) {
   const map = useMap()
+  const callbackRef = useRef(onCircleDrawn)
+  callbackRef.current = onCircleDrawn
 
   useEffect(() => {
     const drawnItems = new L.FeatureGroup()
@@ -43,7 +45,7 @@ export function CircleSelector({ onCircleDrawn }: Props) {
       const circle = e.layer as L.Circle
       const { lat, lng } = circle.getLatLng()
       const radius = Math.round(circle.getRadius())
-      onCircleDrawn(lat, lng, radius)
+      callbackRef.current(lat, lng, radius)
     }
 
     map.on(L.Draw.Event.CREATED, handleCreated)
@@ -53,7 +55,7 @@ export function CircleSelector({ onCircleDrawn }: Props) {
       map.removeLayer(drawnItems)
       map.off(L.Draw.Event.CREATED, handleCreated)
     }
-  }, [map, onCircleDrawn])
+  }, [map])
 
   return null
 }

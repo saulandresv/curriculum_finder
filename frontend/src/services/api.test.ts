@@ -28,7 +28,9 @@ describe('fetchBusinesses', () => {
     const url = (fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
     expect(url).toContain('/api/search')
     expect(url).toContain('lat=-33.45')
+    expect(url).toContain('lon=-70.65')
     expect(url).toContain('radius=500')
+    expect(url).toContain('type=all')
     expect(result).toEqual(MOCK_RESPONSE)
   })
 
