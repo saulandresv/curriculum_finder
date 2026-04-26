@@ -154,6 +154,7 @@ export function MapCardView() {
   const [onlyWithVacancies, setOnlyWithVacancies] = useState(false)
   const [vacancyCache, setVacancyCache] = useState<Record<string, number>>({})
   const [vacancyCacheLoading, setVacancyCacheLoading] = useState(false)
+  const [showOverlay, setShowOverlay] = useState(true)
   const [routeSet, setRouteSet] = useState<Set<string>>(new Set())
   const [placesData, setPlacesData] = useState<PlacesData | null>(null)
   const [placesLoading, setPlacesLoading] = useState(false)
@@ -413,15 +414,15 @@ export function MapCardView() {
             </LeafletMapContainer>
 
             {/* overlay: instrucciones para nuevos usuarios */}
-            {!circle && !locked && (
+            {showOverlay && !circle && !locked && (
               <div style={{ position: 'absolute', inset: 0, zIndex: 1001, background: 'rgba(0,0,0,0.84)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28 }}>
                 <div style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '9px', letterSpacing: '4px', color: '#f5e642', fontWeight: 900 }}>
                   CÓMO USAR
                 </div>
                 <div className="mcv-steps-row">
                   {([
-                    { n: '01', title: 'ACTIVA EL DIBUJO', desc: 'Click en "✏ DIBUJAR ZONA" arriba a la derecha' },
-                    { n: '02', title: 'DEFINE EL ÁREA', desc: 'Click y arrastra en el mapa para delimitar la zona' },
+                    { n: '01', title: 'NAVEGA EL MAPA', desc: 'Desplázate para encontrar la zona que quieres explorar' },
+                    { n: '02', title: 'ACTIVA EL DIBUJO', desc: 'Click en "✏ DIBUJAR ZONA" y arrastra para delimitar el área' },
                     { n: '03', title: 'EXPLORA Y POSTULA', desc: 'Filtra empresas, revisa vacantes y planifica tu ruta' },
                   ] as const).map((s) => (
                     <div key={s.n} className="mcv-step-card">
@@ -431,12 +432,20 @@ export function MapCardView() {
                     </div>
                   ))}
                 </div>
-                <button
-                  onClick={() => setLocked(true)}
-                  style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '10px', fontWeight: 900, letterSpacing: '2px', padding: '10px 28px', background: '#f5e642', color: '#000', border: '3px solid #000', cursor: 'pointer', boxShadow: '4px 4px 0 rgba(255,255,255,0.15)' }}
-                >
-                  EMPEZAR →
-                </button>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button
+                    onClick={() => setShowOverlay(false)}
+                    style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '9px', fontWeight: 900, letterSpacing: '1px', padding: '10px 20px', background: 'transparent', color: '#fff', border: '2px solid #555', cursor: 'pointer' }}
+                  >
+                    🗺 EXPLORAR MAPA
+                  </button>
+                  <button
+                    onClick={() => { setShowOverlay(false); setLocked(true) }}
+                    style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '9px', fontWeight: 900, letterSpacing: '1px', padding: '10px 20px', background: '#f5e642', color: '#000', border: '3px solid #000', cursor: 'pointer', boxShadow: '4px 4px 0 rgba(255,255,255,0.15)' }}
+                  >
+                    ✏ DIBUJAR ZONA →
+                  </button>
+                </div>
               </div>
             )}
 
@@ -652,7 +661,7 @@ export function MapCardView() {
                   Activa el modo dibujo en el<br />mapa y arrastra para explorar<br />empresas en esa zona.
                 </div>
                 <button
-                  onClick={() => setLocked(true)}
+                  onClick={() => { setShowOverlay(false); setLocked(true) }}
                   style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '8px', fontWeight: 900, padding: '8px 18px', background: '#000', color: '#f5e642', border: '2px solid #000', cursor: 'pointer', letterSpacing: '2px', marginTop: 4 }}
                 >
                   DIBUJAR ZONA →
