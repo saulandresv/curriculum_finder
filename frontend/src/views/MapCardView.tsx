@@ -154,6 +154,7 @@ export function MapCardView() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
   const [onlyWithVacancies, setOnlyWithVacancies] = useState(false)
   const [vacancyCache, setVacancyCache] = useState<Record<string, number>>({})
+  const [ratingsCache, setRatingsCache] = useState<Record<string, number>>({})
   const [vacancyCacheLoading, setVacancyCacheLoading] = useState(false)
   const [showOverlay, setShowOverlay] = useState(true)
   const [filterOpen, setFilterOpen] = useState(() => window.innerWidth > 640)
@@ -203,7 +204,11 @@ export function MapCardView() {
     setPlacesData(null)
     fetch(`${API_BASE}/api/places?name=${encodeURIComponent(b.name)}&lat=${b.lat}&lon=${b.lon}`)
       .then((r) => r.json())
-      .then((d: PlacesData) => setPlacesData(Object.keys(d).some((k) => d[k as keyof PlacesData] != null) ? d : null))
+      .then((d: PlacesData) => {
+        const valid = Object.keys(d).some((k) => d[k as keyof PlacesData] != null) ? d : null
+        setPlacesData(valid)
+        if (valid?.rating != null && selectedId) setRatingsCache((prev) => ({ ...prev, [selectedId]: valid.rating! }))
+      })
       .catch(() => setPlacesData(null))
       .finally(() => setPlacesLoading(false))
   }, [selectedId, businesses])
@@ -629,7 +634,7 @@ export function MapCardView() {
               style={{ width: '100%', padding: '8px 14px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
             >
               <span style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '8px', fontWeight: 900, letterSpacing: '2px', color: '#000' }}>FILTROS</span>
-              <span style={{ fontSize: '10px', color: '#000', display: 'inline-block', transform: filterOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
+              <span style={{ width: 20, height: 20, background: '#f5e642', border: '2px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transform: filterOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', fontSize: 11, fontWeight: 900 }}>▼</span>
             </button>
             {filterOpen && (
               <div style={{ padding: '4px 14px 10px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -751,8 +756,15 @@ export function MapCardView() {
                     )
                   })()}
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '11px', fontWeight: 700, color: '#000', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {b.name}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
+                      <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '11px', fontWeight: 700, color: '#000', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+                        {b.name}
+                      </div>
+                      {ratingsCache[b.id] != null && (
+                        <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 2, background: '#000', color: '#f5e642', fontFamily: 'Space Grotesk, sans-serif', fontSize: '9px', fontWeight: 700, padding: '1px 5px', borderRadius: 2, whiteSpace: 'nowrap' }}>
+                          ★ {ratingsCache[b.id].toFixed(1)}
+                        </span>
+                      )}
                     </div>
                     {b.address && (
                       <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '10px', color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
