@@ -1,5 +1,5 @@
 // frontend/src/views/MapCardView.tsx
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import './MapCardView.css'
 import { MapContainer as LeafletMapContainer, TileLayer, useMap, Circle, Marker } from 'react-leaflet'
 import L from 'leaflet'
@@ -326,7 +326,7 @@ export function MapCardView() {
     )
   }
 
-  const filtered = businesses
+  const filtered = useMemo(() => businesses
     .filter(
       (b) =>
         activeTypes.has(b.type) &&
@@ -355,7 +355,7 @@ export function MapCardView() {
         }
         default: return 0
       }
-    })
+    }), [businesses, activeTypes, search, onlyWithVacancies, vacancyCache, sortField, sortDir, statuses, ratingsCache])
 
   const allFilteredSelected = filtered.length > 0 && filtered.every((b) => routeSet.has(b.id))
 
