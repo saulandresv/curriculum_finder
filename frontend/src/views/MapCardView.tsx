@@ -214,10 +214,18 @@ export function MapCardView() {
       .finally(() => setPlacesLoading(false))
   }, [selectedId, businesses])
 
+  const MAX_RADIUS = 5000
+
   const handleCircleDrawn = (c: DrawnCircle) => {
+    if (c.radius > MAX_RADIUS) {
+      setError(`Radio máximo: 5 km. Dibujaste ${formatRadius(Math.round(c.radius))}.`)
+      setLocked(false)
+      return
+    }
     setCircle(c)
     setSelectedId(null)
     setLocked(false)
+    setError(null)
   }
 
   const toggleType = (t: string) => {
