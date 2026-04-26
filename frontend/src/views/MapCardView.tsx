@@ -125,6 +125,7 @@ function MapController({ locked, onCircleDrawn }: { locked: boolean; onCircleDra
     handler.enable()
 
     const onCreated = (e: L.DrawEvents.Created) => {
+      map.removeLayer(e.layer)
       const circle = e.layer as L.Circle
       callbackRef.current({ center: circle.getLatLng(), radius: circle.getRadius() })
       handler.enable()
@@ -155,6 +156,7 @@ export function MapCardView() {
   const [vacancyCache, setVacancyCache] = useState<Record<string, number>>({})
   const [vacancyCacheLoading, setVacancyCacheLoading] = useState(false)
   const [showOverlay, setShowOverlay] = useState(true)
+  const [filterOpen, setFilterOpen] = useState(true)
   const [routeSet, setRouteSet] = useState<Set<string>>(new Set())
   const [placesData, setPlacesData] = useState<PlacesData | null>(null)
   const [placesLoading, setPlacesLoading] = useState(false)
@@ -415,7 +417,7 @@ export function MapCardView() {
 
             {/* overlay: instrucciones para nuevos usuarios */}
             {showOverlay && !circle && !locked && (
-              <div style={{ position: 'absolute', inset: 0, zIndex: 1001, background: 'rgba(0,0,0,0.84)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28 }}>
+              <div className="mcv-overlay" style={{ position: 'absolute', inset: 0, zIndex: 1001, background: 'rgba(0,0,0,0.84)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28 }}>
                 <div style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '9px', letterSpacing: '4px', color: '#f5e642', fontWeight: 900 }}>
                   CÓMO USAR
                 </div>
@@ -616,35 +618,46 @@ export function MapCardView() {
             </div>
           )}
 
-          {/* category filter chips */}
-          <div style={{ padding: '10px 14px', display: 'flex', flexWrap: 'wrap', gap: '6px', flexShrink: 0, borderBottom: '2px solid #000' }}>
-            {ALL_TYPES.map((t) => {
-              const active = activeTypes.has(t)
-              const color = TYPE_COLORS[t]
-              return (
-                <button
-                  key={t}
-                  onClick={() => toggleType(t)}
-                  style={{
-                    fontFamily: 'Space Grotesk, sans-serif',
-                    fontSize: '9px',
-                    fontWeight: 700,
-                    padding: '3px 8px',
-                    border: `2px solid ${active ? color : '#ccc'}`,
-                    background: active ? color + '18' : 'transparent',
-                    color: active ? color : '#aaa',
-                    cursor: 'pointer',
-                    letterSpacing: '0.5px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                  }}
-                >
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: active ? color : '#ccc', flexShrink: 0 }} />
-                  {TYPE_LABELS[t]}
-                </button>
-              )
-            })}
+          {/* category filter chips — collapsible */}
+          <div style={{ flexShrink: 0, borderBottom: '2px solid #000' }}>
+            <button
+              onClick={() => setFilterOpen((v) => !v)}
+              style={{ width: '100%', padding: '8px 14px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+            >
+              <span style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '8px', fontWeight: 900, letterSpacing: '2px', color: '#000' }}>FILTROS</span>
+              <span style={{ fontSize: '10px', color: '#000', display: 'inline-block', transform: filterOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
+            </button>
+            {filterOpen && (
+              <div style={{ padding: '4px 14px 10px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {ALL_TYPES.map((t) => {
+                  const active = activeTypes.has(t)
+                  const color = TYPE_COLORS[t]
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => toggleType(t)}
+                      style={{
+                        fontFamily: 'Space Grotesk, sans-serif',
+                        fontSize: '9px',
+                        fontWeight: 700,
+                        padding: '3px 8px',
+                        border: `2px solid ${active ? color : '#ccc'}`,
+                        background: active ? color + '18' : 'transparent',
+                        color: active ? color : '#aaa',
+                        cursor: 'pointer',
+                        letterSpacing: '0.5px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: active ? color : '#ccc', flexShrink: 0 }} />
+                      {TYPE_LABELS[t]}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           {/* business list */}
