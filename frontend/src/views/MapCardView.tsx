@@ -496,7 +496,7 @@ export function MapCardView() {
             {locked && (
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 1001, background: '#f5e642', padding: '7px 16px', display: 'flex', alignItems: 'center', borderTop: '2px solid #000' }}>
                 <span style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '8px', fontWeight: 900, letterSpacing: '2px', color: '#000', flex: 1, textAlign: 'center' }}>
-                  ✏ MODO DIBUJO ACTIVO — CLICK Y ARRASTRA PARA DEFINIR EL ÁREA
+                  ✏ MODO DIBUJO — CLICK Y ARRASTRA · MÁX 5 KM
                 </span>
               </div>
             )}
