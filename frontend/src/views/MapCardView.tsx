@@ -145,6 +145,7 @@ export function MapCardView() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [activeTypes, setActiveTypes] = useState<Set<string>>(new Set(ALL_TYPES))
   const [search, setSearch] = useState('')
+  const [sortBy, setSortBy] = useState<'name-asc' | 'name-desc' | 'type' | 'status'>('name-asc')
   const [placesData, setPlacesData] = useState<PlacesData | null>(null)
   const [placesLoading, setPlacesLoading] = useState(false)
   const [jobsData, setJobsData] = useState<{ total: number; jobs: { title: string; company: string; location: string; link: string }[] } | null>(null)
@@ -200,18 +201,39 @@ export function MapCardView() {
 
   const toggleType = (t: string) => {
     setActiveTypes((prev) => {
+      if (prev.size === ALL_TYPES.length) return new Set([t])
       const next = new Set(prev)
-      if (next.has(t)) next.delete(t)
-      else next.add(t)
+      if (next.has(t)) {
+        next.delete(t)
+        if (next.size === 0) return new Set(ALL_TYPES)
+      } else {
+        next.add(t)
+      }
       return next
     })
   }
 
-  const filtered = businesses.filter(
-    (b) =>
-      activeTypes.has(b.type) &&
-      (search === '' || b.name.toLowerCase().includes(search.toLowerCase()))
-  )
+  const STATUS_ORDER: Record<string, number> = { interesado: 0, postule: 1, ya_fui: 2, descartado: 3 }
+
+  const filtered = businesses
+    .filter(
+      (b) =>
+        activeTypes.has(b.type) &&
+        (search === '' || b.name.toLowerCase().includes(search.toLowerCase()))
+    )
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'name-asc':  return a.name.localeCompare(b.name)
+        case 'name-desc': return b.name.localeCompare(a.name)
+        case 'type':      return a.type.localeCompare(b.type) || a.name.localeCompare(b.name)
+        case 'status': {
+          const sa = statuses[a.id] != null ? (STATUS_ORDER[statuses[a.id]] ?? 99) : 99
+          const sb = statuses[b.id] != null ? (STATUS_ORDER[statuses[b.id]] ?? 99) : 99
+          return sa - sb || a.name.localeCompare(b.name)
+        }
+        default: return 0
+      }
+    })
 
   const exportCSV = () => {
     const headers = ['Nombre', 'Tipo', 'Dirección', 'Estado']
@@ -357,6 +379,29 @@ export function MapCardView() {
                 boxSizing: 'border-box',
               }}
             />
+          </div>
+
+          {/* sort controls */}
+          <div style={{ padding: '8px 14px 0', display: 'flex', gap: '4px', flexShrink: 0, flexWrap: 'wrap' }}>
+            {([['name-asc', 'A→Z'], ['name-desc', 'Z→A'], ['type', 'TIPO'], ['status', 'ESTADO']] as const).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setSortBy(key)}
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: '8px',
+                  fontWeight: 700,
+                  padding: '2px 7px',
+                  border: `1.5px solid ${sortBy === key ? '#000' : '#ccc'}`,
+                  background: sortBy === key ? '#000' : 'transparent',
+                  color: sortBy === key ? '#f5e642' : '#aaa',
+                  cursor: 'pointer',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* category filter chips */}
