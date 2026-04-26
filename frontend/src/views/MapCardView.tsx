@@ -24,7 +24,11 @@ const TYPE_COLORS: Record<string, string> = {
   office: '#7c3aed',
   restaurant: '#ff3f00',
   cafe: '#f59e0b',
-  shop: '#06b6d4',
+  tienda: '#06b6d4',
+  supermercado: '#22c55e',
+  ferreteria: '#d97706',
+  panaderia: '#f97316',
+  ropa: '#a855f7',
   bank: '#16a34a',
   hotel: '#ec4899',
   other: '#6b7280',
@@ -34,7 +38,11 @@ const TYPE_LABELS: Record<string, string> = {
   office: 'OFICINA',
   restaurant: 'RESTÓ',
   cafe: 'CAFÉ',
-  shop: 'SHOP',
+  tienda: 'TIENDA',
+  supermercado: 'SÚPER',
+  ferreteria: 'FERRET.',
+  panaderia: 'PANAD.',
+  ropa: 'ROPA',
   bank: 'BANCO',
   hotel: 'HOTEL',
   other: 'OTRO',
@@ -405,7 +413,7 @@ export function MapCardView() {
               return (
                 <button
                   key={b.id}
-                  onClick={() => setSelectedId(isSelected ? null : b.id)}
+                  onClick={() => setSelectedId(b.id)}
                   style={{
                     width: '100%',
                     display: 'flex',

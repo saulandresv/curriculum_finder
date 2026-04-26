@@ -38,6 +38,18 @@ _AMENITY_TO_TYPE = {
     "bank": "bank",
 }
 
+_SHOP_TO_TYPE = {
+    "supermarket": "supermercado",
+    "convenience": "supermercado",
+    "hardware": "ferreteria",
+    "doityourself": "ferreteria",
+    "bakery": "panaderia",
+    "pastry": "panaderia",
+    "clothes": "ropa",
+    "shoes": "ropa",
+    "fashion": "ropa",
+}
+
 
 def _build_query(lat: float, lon: float, radius: int, business_type: str) -> str:
     around = f"(around:{radius},{lat},{lon})"
@@ -69,7 +81,7 @@ def _parse_element(el: dict) -> Optional[dict]:
         if tags.get("tourism") == "hotel":
             business_type = "hotel"
         elif tags.get("shop"):
-            business_type = "shop"
+            business_type = _SHOP_TO_TYPE.get(tags["shop"], "tienda")
         elif tags.get("office"):
             business_type = "office"
         else:
@@ -91,8 +103,9 @@ def _parse_element(el: dict) -> Optional[dict]:
 
 async def search_businesses(lat: float, lon: float, radius: int, business_type: str) -> list[dict]:
     query = _build_query(lat, lon, radius, business_type)
+    headers = {"User-Agent": "curriculum-rutes/1.0 (personal job search tool)"}
     async with httpx.AsyncClient(timeout=20.0) as client:
-        response = await client.post(OVERPASS_URL, data={"data": query})
+        response = await client.post(OVERPASS_URL, data={"data": query}, headers=headers)
         response.raise_for_status()
         data = response.json()
 
