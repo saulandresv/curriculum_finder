@@ -156,7 +156,7 @@ export function MapCardView() {
   const [vacancyCache, setVacancyCache] = useState<Record<string, number>>({})
   const [vacancyCacheLoading, setVacancyCacheLoading] = useState(false)
   const [showOverlay, setShowOverlay] = useState(true)
-  const [filterOpen, setFilterOpen] = useState(true)
+  const [filterOpen, setFilterOpen] = useState(() => window.innerWidth > 640)
   const [routeSet, setRouteSet] = useState<Set<string>>(new Set())
   const [placesData, setPlacesData] = useState<PlacesData | null>(null)
   const [placesLoading, setPlacesLoading] = useState(false)
@@ -430,20 +430,22 @@ export function MapCardView() {
                     { n: '03', title: 'EXPLORA Y POSTULA', desc: 'Filtra empresas, revisa vacantes y planifica tu ruta' },
                   ] as const).map((s) => (
                     <div key={s.n} className="mcv-step-card">
-                      <div style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '24px', fontWeight: 900, color: '#f5e642', lineHeight: 1 }}>{s.n}</div>
-                      <div style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '7px', letterSpacing: '1px', color: '#fff', fontWeight: 700, lineHeight: 1.5 }}>{s.title}</div>
-                      <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '9px', color: '#888', lineHeight: 1.5 }}>{s.desc}</div>
+                      <div className="mcv-step-n" style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '24px', fontWeight: 900, color: '#f5e642', lineHeight: 1 }}>{s.n}</div>
+                      <div className="mcv-step-title" style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '7px', letterSpacing: '1px', color: '#fff', fontWeight: 700, lineHeight: 1.5 }}>{s.title}</div>
+                      <div className="mcv-step-desc" style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '9px', color: '#888', lineHeight: 1.5 }}>{s.desc}</div>
                     </div>
                   ))}
                 </div>
-                <div style={{ display: 'flex', gap: 12 }}>
+                <div className="mcv-overlay-btns" style={{ display: 'flex', gap: 12 }}>
                   <button
+                    className="mcv-overlay-btn"
                     onClick={() => setShowOverlay(false)}
                     style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '9px', fontWeight: 900, letterSpacing: '1px', padding: '10px 20px', background: 'transparent', color: '#fff', border: '2px solid #555', cursor: 'pointer' }}
                   >
                     🗺 EXPLORAR MAPA
                   </button>
                   <button
+                    className="mcv-overlay-btn"
                     onClick={() => { setShowOverlay(false); setLocked(true) }}
                     style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '9px', fontWeight: 900, letterSpacing: '1px', padding: '10px 20px', background: '#f5e642', color: '#000', border: '3px solid #000', cursor: 'pointer', boxShadow: '4px 4px 0 rgba(255,255,255,0.15)' }}
                   >
