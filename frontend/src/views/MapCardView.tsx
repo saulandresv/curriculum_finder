@@ -150,12 +150,13 @@ export function MapCardView() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [activeTypes, setActiveTypes] = useState<Set<string>>(new Set(ALL_TYPES))
   const [search, setSearch] = useState('')
-  const [sortField, setSortField] = useState<'name' | 'type' | 'status' | 'vacancies'>('name')
+  const [sortField, setSortField] = useState<'name' | 'type' | 'status' | 'vacancies' | 'rating'>('name')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
   const [onlyWithVacancies, setOnlyWithVacancies] = useState(false)
   const [vacancyCache, setVacancyCache] = useState<Record<string, number>>({})
   const [ratingsCache, setRatingsCache] = useState<Record<string, number>>({})
   const [vacancyCacheLoading, setVacancyCacheLoading] = useState(false)
+  const [ratingsCacheLoading, setRatingsCacheLoading] = useState(false)
   const [showOverlay, setShowOverlay] = useState(true)
   const [filterOpen, setFilterOpen] = useState(() => window.innerWidth > 640)
   const [routeSet, setRouteSet] = useState<Set<string>>(new Set())
@@ -253,6 +254,29 @@ export function MapCardView() {
     }).finally(() => setVacancyCacheLoading(false))
   }
 
+  const handleLoadRatings = async () => {
+    const uncached = businesses.filter((b) => !(b.id in ratingsCache))
+    if (uncached.length === 0) { setSortField('rating'); setSortDir('desc'); return }
+    setRatingsCacheLoading(true)
+    const BATCH = 3
+    const updates: Record<string, number> = {}
+    for (let i = 0; i < uncached.length; i += BATCH) {
+      const chunk = uncached.slice(i, i + BATCH)
+      await Promise.all(
+        chunk.map((b) =>
+          fetch(`${API_BASE}/api/places?name=${encodeURIComponent(b.name)}&lat=${b.lat}&lon=${b.lon}`)
+            .then((r) => r.json())
+            .then((d: PlacesData) => { if (d.rating != null) updates[b.id] = d.rating! })
+            .catch(() => {})
+        )
+      )
+    }
+    setRatingsCache((prev) => ({ ...prev, ...updates }))
+    setRatingsCacheLoading(false)
+    setSortField('rating')
+    setSortDir('desc')
+  }
+
   const toggleRoute = (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
     setRouteSet((prev) => {
@@ -320,6 +344,11 @@ export function MapCardView() {
           const va = vacancyCache[a.id] ?? -1
           const vb = vacancyCache[b.id] ?? -1
           return dir * ((vb - va) || a.name.localeCompare(b.name))
+        }
+        case 'rating': {
+          const ra = ratingsCache[a.id] ?? -1
+          const rb = ratingsCache[b.id] ?? -1
+          return dir * ((rb - ra) || a.name.localeCompare(b.name))
         }
         default: return 0
       }
@@ -569,6 +598,7 @@ export function MapCardView() {
               <option value="type">TIPO</option>
               <option value="status">ESTADO</option>
               <option value="vacancies">VACANTES</option>
+              <option value="rating">PUNTAJE</option>
             </select>
             <button
               onClick={() => setSortDir((d) => d === 'asc' ? 'desc' : 'asc')}
@@ -604,6 +634,26 @@ export function MapCardView() {
             >
               {vacancyCacheLoading ? '...' : '● VACANTES'}
             </button>
+            {businesses.length > 0 && (
+              <button
+                onClick={handleLoadRatings}
+                disabled={ratingsCacheLoading}
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: '8px',
+                  fontWeight: 700,
+                  padding: '4px 8px',
+                  border: `2px solid ${sortField === 'rating' ? '#f59e0b' : '#ccc'}`,
+                  background: sortField === 'rating' ? '#f59e0b18' : 'transparent',
+                  color: sortField === 'rating' ? '#f59e0b' : '#888',
+                  cursor: ratingsCacheLoading ? 'wait' : 'pointer',
+                  letterSpacing: '0.5px',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {ratingsCacheLoading ? '...' : '★ PUNTAJE'}
+              </button>
+            )}
           </div>
 
           {/* route toolbar */}
