@@ -204,6 +204,24 @@ export function MapCardView() {
       (search === '' || b.name.toLowerCase().includes(search.toLowerCase()))
   )
 
+  const exportCSV = () => {
+    const headers = ['Nombre', 'Tipo', 'Dirección', 'Estado']
+    const rows = filtered.map((b) => [
+      `"${b.name.replace(/"/g, '""')}"`,
+      TYPE_LABELS[b.type] ?? b.type,
+      `"${(b.address ?? '').replace(/"/g, '""')}"`,
+      statuses[b.id] ? STATUS_CONFIG[statuses[b.id]].label : '',
+    ])
+    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `empresas_${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div style={{ height: '100vh', background: '#f0ebe3', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2vh 2vw' }}>
       <div style={{ display: 'flex', gap: '1.5vw', alignItems: 'stretch', width: '94vw', maxWidth: '1500px', height: '88vh' }}>
@@ -284,11 +302,31 @@ export function MapCardView() {
             <span style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '9px', fontWeight: 900, letterSpacing: '2px', color: '#f5e642' }}>
               LOCALES
             </span>
-            {businesses.length > 0 && (
-              <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '10px', color: '#888' }}>
-                {filtered.length}/{businesses.length}
-              </span>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {businesses.length > 0 && (
+                <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '10px', color: '#888' }}>
+                  {filtered.length}/{businesses.length}
+                </span>
+              )}
+              {filtered.length > 0 && (
+                <button
+                  onClick={exportCSV}
+                  style={{
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    fontSize: '8px',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    border: '1px solid #f5e642',
+                    background: 'transparent',
+                    color: '#f5e642',
+                    cursor: 'pointer',
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  CSV ↓
+                </button>
+              )}
+            </div>
           </div>
 
           {/* search input */}
