@@ -217,12 +217,7 @@ export function MapCardView() {
   const MAX_RADIUS = 5000
 
   const handleCircleDrawn = (c: DrawnCircle) => {
-    if (c.radius > MAX_RADIUS) {
-      setError(`Radio máximo: 5 km. Dibujaste ${formatRadius(Math.round(c.radius))}.`)
-      setLocked(false)
-      return
-    }
-    setCircle(c)
+    setCircle({ ...c, radius: Math.min(c.radius, MAX_RADIUS) })
     setSelectedId(null)
     setLocked(false)
     setError(null)
