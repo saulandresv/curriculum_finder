@@ -1,7 +1,11 @@
 import httpx
 from typing import Optional
 
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+_OVERPASS_MIRRORS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass.private.coffee/api/interpreter",
+]
 
 _TYPE_FILTERS: dict[str, list[str]] = {
     "restaurant": [
@@ -104,14 +108,20 @@ def _parse_element(el: dict) -> Optional[dict]:
 async def search_businesses(lat: float, lon: float, radius: int, business_type: str) -> list[dict]:
     query = _build_query(lat, lon, radius, business_type)
     headers = {"User-Agent": "curriculum-rutes/1.0 (personal job search tool)"}
+    last_exc: Exception = RuntimeError("No mirrors available")
     async with httpx.AsyncClient(timeout=60.0) as client:
-        response = await client.post(OVERPASS_URL, data={"data": query}, headers=headers)
-        response.raise_for_status()
-        data = response.json()
-
-    results = []
-    for el in data.get("elements", []):
-        parsed = _parse_element(el)
-        if parsed:
-            results.append(parsed)
-    return results
+        for url in _OVERPASS_MIRRORS:
+            try:
+                response = await client.post(url, data={"data": query}, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+                results = []
+                for el in data.get("elements", []):
+                    parsed = _parse_element(el)
+                    if parsed:
+                        results.append(parsed)
+                return results
+            except Exception as exc:
+                last_exc = exc
+                continue
+    raise last_exc
