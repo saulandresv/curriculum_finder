@@ -373,13 +373,15 @@ export function MapCardView() {
                 </span>
               )}
               {circle && (
-                <button onClick={() => { setCircle(null); setSelectedId(null) }} style={btnStyle('#ff3f00')}>
+                <button onClick={() => { setCircle(null); setSelectedId(null); setBusinesses([]) }} style={btnStyle('#ff3f00')}>
                   LIMPIAR
                 </button>
               )}
-              <button onClick={() => setLocked((v) => !v)} style={btnStyle(locked ? '#f5e642' : '#fff')}>
-                {locked ? '✕ CANCELAR' : '✏ DIBUJAR ZONA'}
-              </button>
+              {(!showOverlay || circle) && (
+                <button onClick={() => setLocked((v) => !v)} style={btnStyle(locked ? '#f5e642' : '#fff')}>
+                  {locked ? '✕ CANCELAR' : '✏ DIBUJAR ZONA'}
+                </button>
+              )}
             </div>
           </div>
 
