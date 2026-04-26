@@ -1,5 +1,6 @@
 // frontend/src/views/MapCardView.tsx
 import { useState, useEffect, useRef } from 'react'
+import './MapCardView.css'
 import { MapContainer as LeafletMapContainer, TileLayer, useMap, Circle, Marker } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -346,11 +347,11 @@ export function MapCardView() {
   }
 
   return (
-    <div style={{ height: '100vh', background: '#f0ebe3', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2vh 2vw' }}>
-      <div style={{ display: 'flex', gap: '1.5vw', alignItems: 'stretch', width: '94vw', maxWidth: '1500px', height: '88vh' }}>
+    <div className="mcv-root">
+      <div className="mcv-layout">
 
         {/* ── MAP CARD ── */}
-        <div style={{ flex: '1 1 0', minWidth: 0, border: '3px solid #000', boxShadow: '8px 8px 0 #000', background: '#fff', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div className="mcv-map-card">
 
           {/* header */}
           <div style={{ flexShrink: 0, padding: '0 1.2vw', minHeight: '44px', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -417,13 +418,13 @@ export function MapCardView() {
                 <div style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '9px', letterSpacing: '4px', color: '#f5e642', fontWeight: 900 }}>
                   CÓMO USAR
                 </div>
-                <div style={{ display: 'flex', gap: 12 }}>
+                <div className="mcv-steps-row">
                   {([
                     { n: '01', title: 'ACTIVA EL DIBUJO', desc: 'Click en "✏ DIBUJAR ZONA" arriba a la derecha' },
                     { n: '02', title: 'DEFINE EL ÁREA', desc: 'Click y arrastra en el mapa para delimitar la zona' },
                     { n: '03', title: 'EXPLORA Y POSTULA', desc: 'Filtra empresas, revisa vacantes y planifica tu ruta' },
                   ] as const).map((s) => (
-                    <div key={s.n} style={{ background: '#111', border: '2px solid #333', padding: '14px 12px', width: 130, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div key={s.n} className="mcv-step-card">
                       <div style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '24px', fontWeight: 900, color: '#f5e642', lineHeight: 1 }}>{s.n}</div>
                       <div style={{ fontFamily: 'Unbounded, sans-serif', fontSize: '7px', letterSpacing: '1px', color: '#fff', fontWeight: 700, lineHeight: 1.5 }}>{s.title}</div>
                       <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '9px', color: '#888', lineHeight: 1.5 }}>{s.desc}</div>
@@ -451,16 +452,7 @@ export function MapCardView() {
         </div>
 
         {/* ── SIDE PANEL CARD ── */}
-        <div style={{
-          width: 'clamp(260px, 26vw, 400px)',
-          flexShrink: 0,
-          border: '3px solid #000',
-          boxShadow: '8px 8px 0 #000',
-          background: '#fff',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}>
+        <div className="mcv-panel-card">
 
           {/* panel header */}
           <div style={{ flexShrink: 0, padding: '0 14px', minHeight: '44px', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
