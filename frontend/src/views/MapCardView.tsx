@@ -17,6 +17,7 @@ type PlacesData = {
   phone?: string
   website?: string
   hours?: string[]
+  photo_reference?: string
 }
 
 const TYPE_COLORS: Record<string, string> = {
@@ -504,6 +505,19 @@ export function MapCardView() {
                     )}
                     {isSelected && placesData && (
                       <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {placesData.photo_reference && (
+                          <img
+                            src={`/api/places/photo?ref=${placesData.photo_reference}`}
+                            alt="fachada"
+                            style={{
+                              width: '100%',
+                              height: '100px',
+                              objectFit: 'cover',
+                              border: '2px solid #000',
+                              display: 'block',
+                            }}
+                          />
+                        )}
                         {placesData.rating != null && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <Stars rating={placesData.rating} />
