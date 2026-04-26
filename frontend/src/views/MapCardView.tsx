@@ -7,6 +7,8 @@ import 'leaflet-draw'
 import '../components/Map/leafletIconFix'
 import { fetchBusinesses } from '../services/api'
 import type { Business } from '../types'
+
+const API_BASE = import.meta.env.VITE_API_URL ?? ''
 import { useBusinessStatus, type BusinessStatus } from '../hooks/useBusinessStatus'
 
 type DrawnCircle = { center: L.LatLng; radius: number }
@@ -179,7 +181,7 @@ export function MapCardView() {
     if (!b) return
     setJobsLoading(true)
     setJobsData(null)
-    fetch(`/api/jobs?name=${encodeURIComponent(b.name)}`)
+    fetch(`${API_BASE}/api/jobs?name=${encodeURIComponent(b.name)}`)
       .then((r) => r.json())
       .then((d) => {
         setJobsData(d)
@@ -195,7 +197,7 @@ export function MapCardView() {
     if (!b) return
     setPlacesLoading(true)
     setPlacesData(null)
-    fetch(`/api/places?name=${encodeURIComponent(b.name)}&lat=${b.lat}&lon=${b.lon}`)
+    fetch(`${API_BASE}/api/places?name=${encodeURIComponent(b.name)}&lat=${b.lat}&lon=${b.lon}`)
       .then((r) => r.json())
       .then((d: PlacesData) => setPlacesData(Object.keys(d).some((k) => d[k as keyof PlacesData] != null) ? d : null))
       .catch(() => setPlacesData(null))
@@ -231,7 +233,7 @@ export function MapCardView() {
     setVacancyCacheLoading(true)
     Promise.all(
       uncached.map((b) =>
-        fetch(`/api/jobs?name=${encodeURIComponent(b.name)}`)
+        fetch(`${API_BASE}/api/jobs?name=${encodeURIComponent(b.name)}`)
           .then((r) => r.json())
           .then((d) => [b.id, d.total ?? 0] as const)
           .catch(() => [b.id, 0] as const)
@@ -745,7 +747,7 @@ export function MapCardView() {
                       <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {placesData.photo_reference && (
                           <img
-                            src={`/api/places/photo?ref=${placesData.photo_reference}`}
+                            src={`${API_BASE}/api/places/photo?ref=${placesData.photo_reference}`}
                             alt="fachada"
                             style={{
                               width: '100%',

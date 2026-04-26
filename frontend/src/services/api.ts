@@ -8,8 +8,10 @@ export type SearchParams = {
   type: string
 }
 
+const API_BASE = import.meta.env.VITE_API_URL ?? ''
+
 export async function fetchBusinesses(params: SearchParams): Promise<Business[]> {
-  const url = new URL('/api/search', window.location.origin)
+  const url = new URL(`${API_BASE}/api/search`, window.location.origin)
   url.searchParams.set('lat', String(params.lat))
   url.searchParams.set('lon', String(params.lon))
   url.searchParams.set('radius', String(params.radius))
