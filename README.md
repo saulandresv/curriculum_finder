@@ -16,6 +16,7 @@ Dibuja un círculo sobre cualquier punto del mapa. La app consulta OpenStreetMap
 | Data fetching | TanStack Query v5 |
 | Backend | FastAPI (Python) |
 | Datos geográficos | OpenStreetMap vía Overpass API |
+| Deploy backend | Railway |
 
 ## Estructura
 
